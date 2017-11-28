@@ -1,6 +1,10 @@
 #!/usr/bin/python3
+"""
+Minimum distance classifier
+"""
 
 import numpy as np
+import pdb
 import pprint
 pp = pprint.PrettyPrinter(indent=4)		
 
@@ -8,7 +12,6 @@ pp = pprint.PrettyPrinter(indent=4)
 
 """
 Learning from labeled set
-
 """
 data = np.load("data/trn_img.npy")
 label = np.load("data/trn_lbl.npy")
@@ -39,7 +42,6 @@ for i in range(10):
 		app[i].append(np.mean(dataSliced[i][j]))
 		
 
-
 """
 averageVectors : an array of arrays (average images)
 vector : an array (image)
@@ -49,13 +51,13 @@ returns : the index of the corresponding closest average
 def getMinDistanceIndex(averageVectors, vector):
 	distance = [0,0,0,0,0,0,0,0,0,0]
 	for d in range(10):
-		buf=0
 		for i in range(len(vector)):
-			buf += np.abs(averageVectors[d][i]-vector[i])
-		distance[d] = buf
+			distance[d] += np.abs(averageVectors[d][i]-vector[i])
 	return distance.index(min(distance))
 
-
+"""
+utility function for displaying a progress bar of <length> chars
+"""
 def progressBar(i, maxi, length):
 	nbchars = round((i/maxi)*(length-5))
 	result = "["+nbchars*"="+(length-5-nbchars)*"-"+"]"
@@ -68,10 +70,11 @@ def progressBar(i, maxi, length):
 		result+=str(pcent)
 	return result
 
+
 """
 Evaluating on test data
 """
-
+print("Finished training, starting analysis.")
 
 
 testdata = np.load("data/tst_img.npy")
@@ -121,3 +124,4 @@ for i in range(10):
 print("-----------------------------")
 print("Total  taux d'erreur : "+str(round((bigWrong/bigTotal)*100,2))+"%")
 
+#TODO confusion matrix
