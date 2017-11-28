@@ -38,13 +38,6 @@ for i in range(10):
 	for j in range(784):
 		app[i].append(np.mean(dataSliced[i][j]))
 		
-"""
-# here we have the average vector for each picture
-# so we average again (so it's for each label)
-for i in range(10):
-	app[i] = np.mean(app[i])
-"""	
-#pp.pprint(app)
 
 
 """
@@ -86,6 +79,7 @@ testlabel = np.load("data/tst_lbl.npy")
 
 total = [0,0,0,0,0,0,0,0,0,0]
 nbWrong = [0,0,0,0,0,0,0,0,0,0]
+guesses = [0,0,0,0,0,0,0,0,0,0]
 
 for i in range(len(testdata)) :
 	# compute average and see to which it is closest
@@ -97,15 +91,33 @@ for i in range(len(testdata)) :
 	#print("guess/actual : "+str(guess)+"/"+str(testlabel[i]))
 	print(progressBar(i,len(testdata),60), end="\r")
 	total[testlabel[i]]+=1
+	guesses[guess]+=1
 
 print(" "*60, end="\r")# erase progress line
+
+guessTot = sum(guesses)
+print("Distribution des tentatives :")
+print("0  1  2  3  4  5  6  7  8  9")
+# total très possiblement != 100 à cause de l'arrondi
+for i in range(10):
+	prop = round((guesses[i]/guessTot)*100)
+	if prop < 10:
+		prop = str(prop)+"% "
+	elif prop < 100:
+		prop = str(prop)+"%"
+	else:
+		prop = str(prop)
+	print(prop, end="");
+	
+print("\n-----------------------------")
+
 
 bigWrong=0
 bigTotal=0
 for i in range(10):
-	print("cat. "+str(i)+" taux d'erreur : "+str(round((nbWrong[i]/total[i])*100,2))+"%")
+	print("Cat. "+str(i)+" taux d'erreur : "+str(round((nbWrong[i]/total[i])*100,2))+"%")
 	bigWrong+=nbWrong[i]
 	bigTotal+=total[i]
 print("-----------------------------")
-print("total  taux d'erreur : "+str(round((bigWrong/bigTotal)*100,2))+"%")
+print("Total  taux d'erreur : "+str(round((bigWrong/bigTotal)*100,2))+"%")
 
