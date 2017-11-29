@@ -7,26 +7,24 @@ from utility import *
 import numpy as np
 from sys import argv
 
-# pip/conda package scikit-learn
-# http://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html
-#import sklearn
-
-#import pdb
-import pprint
-pp = pprint.PrettyPrinter(indent=4)		
+import pdb
+from pprint import PrettyPrinter
+pp = PrettyPrinter(indent=4)		
 
 
 
 
 optAverageImages = "-a"
 optPCA = "-p"
+optPCAcomps = 10
 
 if "help" in argv or "-h" in argv:
 	print("Minimum distance classifier")
 	print("Options :")
 	print(optAverageImages+" : display average images once training is done")
-	print(optPCA+" : use PCA (principal component analysis)")
+	print(optPCA+" <n> : use PCA (principal component analysis), with <n> components")
 	exit(0)
+
 
 """
 Learning from labeled set
@@ -63,6 +61,18 @@ for i in range(10): #which category
 		
 print(" "*29, end="\r")# erase progress line
 
+if optPCA in argv :
+	print("PCA  processing in progress..")
+	# pip/conda package scikit-learn
+	# http://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html
+	from sklearn.decomposition import PCA
+	optPCAcomps = int(argv[argv.index(optPCA)+1])
+	pca = PCA(n_components=optPCAcomps)
+	for i in range(10):
+		app[i] = pca.fit(np.array(app[i]).reshape(28,28)).components_
+		app[i] = np.hstack(app[i])
+
+
 
 if optAverageImages in argv:
 	# print average images
@@ -73,7 +83,7 @@ if optAverageImages in argv:
 	for i in range(len(app)):
 		z = fig.add_subplot(2,5,i+1)
 		z.set_title(str(i))
-		plt.imshow(np.array(app[i]).reshape(28,28), plt.cm.gray)
+		plt.imshow(np.array(app[i]).reshape(optPCAcomps,28), plt.cm.gray)
 	plt.show()
 
 	
