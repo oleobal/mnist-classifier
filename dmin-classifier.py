@@ -3,30 +3,31 @@
 Minimum distance classifier
 """
 
+from utility import *
 import numpy as np
+from sys import argv
 import pdb
 import pprint
 pp = pprint.PrettyPrinter(indent=4)		
 
+optAverageImages = "-a"
 
+if "help" in argv or "-h" in argv:
+	print("Minimum distance classifier")
+	print("Options :")
+	print(optAverageImages+" : display average images once training is done")
+	exit(0)
 
 """
 Learning from labeled set
 """
+
+print("Starting reading & training..")
+
 data = np.load("data/trn_img.npy")
 label = np.load("data/trn_lbl.npy")
 
 #pp.pprint(label)
-"""
-for i in range(len(data)):
-	
-	import matplotlib.pyplot as plt
-	img = data[i].reshape(28,28)
-	plt.imshow(img, plt.cm.gray)
-	plt.show()
-	
-	print(label[i])
-"""
 
 # data, sliced up by label
 dataSliced = [[], [], [], [], [], [], [], [], [], []]
@@ -34,14 +35,38 @@ dataSliced = [[], [], [], [], [], [], [], [], [], []]
 # average vectors for each label
 app = [[], [], [], [], [], [], [], [], [], []]
 
+
 for i in range(len(data)):
 	dataSliced[label[i]].append(data[i])
 
-for i in range(10):
-	for j in range(784):
-		app[i].append(np.mean(dataSliced[i][j]))
+for i in range(10): #which category
+	"""
+	for j in dataSliced[i]: #which image
 		
+		px = 0
+		for z in range(784): #which pixel
+			px = np.mean(dataSliced[i][j], z)
+	"""
+	for j in range(784):
+		app[i]=np.mean(dataSliced[i], axis=0)#wot
+		print(progressBar(i*784+j,7840,29), end="\r")
+		
+print(" "*29, end="\r")# erase progress line
 
+
+if optAverageImages in argv:
+	# print average images
+	import matplotlib.pyplot as plt
+	import matplotlib.image as mpimg
+	fig = plt.figure()
+
+	for i in range(len(app)):
+		z = fig.add_subplot(2,5,i+1)
+		z.set_title(str(i))
+		plt.imshow(np.array(app[i]).reshape(28,28), plt.cm.gray)
+	plt.show()
+
+	
 """
 averageVectors : an array of arrays (average images)
 vector : an array (image)
@@ -52,29 +77,13 @@ def getMinDistanceIndex(averageVectors, vector):
 	distance = [0,0,0,0,0,0,0,0,0,0]
 	for d in range(10):
 		for i in range(len(vector)):
-			distance[d] += np.abs(averageVectors[d][i]-vector[i])
+			distance[d] += np.absolute(averageVectors[d][i]-vector[i])
 	return distance.index(min(distance))
-
-"""
-utility function for displaying a progress bar of <length> chars
-"""
-def progressBar(i, maxi, length):
-	nbchars = round((i/maxi)*(length-5))
-	result = "["+nbchars*"="+(length-5-nbchars)*"-"+"]"
-	pcent = round((i/maxi)*100)
-	if pcent<10:
-		result+="0"+str(pcent)+"%"
-	elif pcent<100:
-		result+=str(pcent)+"%"
-	else:
-		result+=str(pcent)
-	return result
-
 
 """
 Evaluating on test data
 """
-print("Finished training, starting analysis.")
+print("Finished training, analysis..")
 
 
 testdata = np.load("data/tst_img.npy")
@@ -92,11 +101,11 @@ for i in range(len(testdata)) :
 	if (guess != testlabel[i]):
 		nbWrong[testlabel[i]]+=1
 	#print("guess/actual : "+str(guess)+"/"+str(testlabel[i]))
-	print(progressBar(i,len(testdata),60), end="\r")
+	print(progressBar(i,len(testdata),29), end="\r")
 	total[testlabel[i]]+=1
 	guesses[guess]+=1
 
-print(" "*60, end="\r")# erase progress line
+print(" "*29, end="\r")# erase progress line
 
 guessTot = sum(guesses)
 print("Distribution des tentatives :")
@@ -118,10 +127,10 @@ print("\n-----------------------------")
 bigWrong=0
 bigTotal=0
 for i in range(10):
-	print("Cat. "+str(i)+" taux d'erreur : "+str(round((nbWrong[i]/total[i])*100,2))+"%")
+	print("Cat. "+str(i)+" failure rate  : "+getNicePercent((nbWrong[i]/total[i])*100))
 	bigWrong+=nbWrong[i]
 	bigTotal+=total[i]
 print("-----------------------------")
-print("Total  taux d'erreur : "+str(round((bigWrong/bigTotal)*100,2))+"%")
+print("Total  failure rate  : "+getNicePercent((bigWrong/bigTotal)*100))
 
 #TODO confusion matrix
