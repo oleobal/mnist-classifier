@@ -6,16 +6,26 @@ Minimum distance classifier
 from utility import *
 import numpy as np
 from sys import argv
-import pdb
+
+# pip/conda package scikit-learn
+# http://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html
+#import sklearn
+
+#import pdb
 import pprint
 pp = pprint.PrettyPrinter(indent=4)		
 
+
+
+
 optAverageImages = "-a"
+optPCA = "-p"
 
 if "help" in argv or "-h" in argv:
 	print("Minimum distance classifier")
 	print("Options :")
 	print(optAverageImages+" : display average images once training is done")
+	print(optPCA+" : use PCA (principal component analysis)")
 	exit(0)
 
 """
@@ -108,7 +118,7 @@ for i in range(len(testdata)) :
 print(" "*29, end="\r")# erase progress line
 
 guessTot = sum(guesses)
-print("Distribution des tentatives :")
+print("Approx guesses distribution :")
 print("0  1  2  3  4  5  6  7  8  9")
 # total très possiblement != 100 à cause de l'arrondi
 for i in range(10):
