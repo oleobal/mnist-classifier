@@ -7,9 +7,9 @@ from utility import *
 import numpy as np
 from sys import argv
 
-import pdb
-from pprint import PrettyPrinter
-pp = PrettyPrinter(indent=4)		
+#import pdb
+#from pprint import PrettyPrinter
+#pp = PrettyPrinter(indent=4)		
 
 
 
@@ -32,7 +32,7 @@ Learning from labeled set
 
 print("Starting reading & training..")
 
-data = np.load("data/trn_img.npy")
+data_unproc = np.load("data/trn_img.npy")
 label = np.load("data/trn_lbl.npy")
 
 #pp.pprint(label)
@@ -44,33 +44,38 @@ dataSliced = [[], [], [], [], [], [], [], [], [], []]
 app = [[], [], [], [], [], [], [], [], [], []]
 
 
-for i in range(len(data)):
-	dataSliced[label[i]].append(data[i])
-
-for i in range(10): #which category
-	"""
-	for j in dataSliced[i]: #which image
-		
-		px = 0
-		for z in range(784): #which pixel
-			px = np.mean(dataSliced[i][j], z)
-	"""
-	for j in range(784):
-		app[i]=np.mean(dataSliced[i], axis=0)#wot
-		print(progressBar(i*784+j,7840,29), end="\r")
-		
-print(" "*29, end="\r")# erase progress line
+totalLearningOps = 0
+progress = 0
 
 if optPCA in argv :
-	print("PCA  processing in progress..")
+	print("(PCA  processing is  enabled)")
 	# pip/conda package scikit-learn
 	# http://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html
 	from sklearn.decomposition import PCA
 	optPCAcomps = int(argv[argv.index(optPCA)+1])
+	data = []
+	totalLearningOps+=len(data_unproc)
+	totalLearningOps+=optPCAcomps*28*10
 	pca = PCA(n_components=optPCAcomps)
-	for i in range(10):
-		app[i] = pca.fit(np.array(app[i]).reshape(28,28)).components_
-		app[i] = np.hstack(app[i])
+	for i in range(len(data_unproc)):
+		data.append(np.hstack(pca.fit(np.array(data_unproc[i]).reshape(28,28)).components_))
+		progress+=1
+		print(progressBar(progress,totalLearningOps,29), end="\r")
+else:
+	totalLearningOps+=28*28*10
+	data = data_unproc
+
+# not counted in progress bar because too fast
+for i in range(len(data)):
+	dataSliced[label[i]].append(data[i])
+
+for i in range(10): #which category
+	for j in range(len(data[0])):
+		app[i]=np.mean(dataSliced[i], axis=0)#wot
+		progress+=1
+		print(progressBar(progress,totalLearningOps,29), end="\r")
+		
+print(" "*29, end="\r")# erase progress line
 
 
 
@@ -106,8 +111,17 @@ Evaluating on test data
 print("Finished training, analysis..")
 
 
-testdata = np.load("data/tst_img.npy")
+testdata_unproc = np.load("data/tst_img.npy")
 testlabel = np.load("data/tst_lbl.npy")
+
+
+if optPCA in argv :
+	testdata = []
+	optPCAcomps = int(argv[argv.index(optPCA)+1])
+	for i in range(len(testdata_unproc)):
+		testdata.append(np.hstack(pca.fit(np.array(testdata_unproc[i]).reshape(28,28)).components_))
+else:
+	testdata = testdata_unproc
 
 total = [0,0,0,0,0,0,0,0,0,0]
 nbWrong = [0,0,0,0,0,0,0,0,0,0]
@@ -115,12 +129,9 @@ guesses = [0,0,0,0,0,0,0,0,0,0]
 
 for i in range(len(testdata)) :
 	# compute average and see to which it is closest
-	#v = np.mean(testdata[i])
-	#guess = np.abs(app - v).argmin()
 	guess = getMinDistanceIndex(app, testdata[i])
 	if (guess != testlabel[i]):
 		nbWrong[testlabel[i]]+=1
-	#print("guess/actual : "+str(guess)+"/"+str(testlabel[i]))
 	print(progressBar(i,len(testdata),29), end="\r")
 	total[testlabel[i]]+=1
 	guesses[guess]+=1
