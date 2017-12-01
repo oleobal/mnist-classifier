@@ -17,6 +17,8 @@ from sys import argv
 optAverageImages = "-a"
 optPCA = "-p"
 optPCAcomps = 28
+optOut = "-o"
+optOutPath = "out.npy"
 displayWidth=39
 
 if "help" in argv or "-h" in argv:
@@ -24,6 +26,7 @@ if "help" in argv or "-h" in argv:
 	print("Options :")
 	print(optAverageImages+" : display average images once training is done")
 	print(optPCA+" <n> : use PCA (principal component analysis), with <n> components")
+	print(optOut+" <path> : write results as .npy array to <path>")
 	exit(0)
 
 
@@ -36,7 +39,6 @@ print("Reading & training..")
 data_unproc = np.load("data/trn_img.npy")
 label = np.load("data/trn_lbl.npy")
 
-#pp.pprint(label)
 
 # data, sliced up by label
 dataSliced = [[], [], [], [], [], [], [], [], [], []]
@@ -128,6 +130,10 @@ total = [0,0,0,0,0,0,0,0,0,0]
 nbWrong = [0,0,0,0,0,0,0,0,0,0]
 guesses = [0,0,0,0,0,0,0,0,0,0]
 
+
+if (optOut in argv):
+	guessRecord=[]
+	
 # +- label
 # |
 # guess
@@ -153,6 +159,8 @@ for i in range(len(testdata)) :
 	total[testlabel[i]]+=1
 	confusionMatrix[guess][testlabel[i]]+=1
 	guesses[guess]+=1 # it can be computed from the confusion matrix, but honestly, the computer is here to do it for us
+	if (optOut in argv):
+		guessRecord.append(guess)
 
 print(" "*displayWidth, end="\r")# erase progress line
 
@@ -199,4 +207,8 @@ for i in range(10):
 print("\n"+"-"*displayWidth)
 print("Total  failure rate  : "+getNicePercent((bigWrong/bigTotal)*100,2))
 
-#TODO confusion matrix
+
+if (optOut in argv):
+	optOutPath = argv[argv.index(optOut)+1]
+	np.save(optOutPath, guessRecord)
+	print("Test results saved to "+optOutPath)
