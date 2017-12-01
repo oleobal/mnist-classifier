@@ -39,6 +39,8 @@ for classifier in classifiers:
     print("Predicting...")
     expected = testlabel
     predicted = classifier.classifier.predict(test)
+    outpath = classifier.name+".npy"
+    np.save(outpath, predicted)
     print("Classification report for classifier %s:\n%s\n"
           % (classifier.classifier, metrics.classification_report(expected, predicted)))
     print("Confusion matrix:\n%s" % metrics.confusion_matrix(expected, predicted))
