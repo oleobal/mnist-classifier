@@ -17,8 +17,15 @@ def progressBar(i, maxi, length):
 """
 returns a justified string for the given number (1-100)
 """
-def getNicePercent(numb):
-	numb = str(round(numb,2))
+def getNicePercent(numb,decimals=0):
+	return getNiceRound(numb,decimals)+"%"
+
+def getNiceRound(numb,dec=0):
+	numb = round(numb,dec)
+	if dec==0:
+		numb = int(numb)
 	
-	numb=numb+" "*(5-len(numb))+"%"
+	numb = str(numb)
+	
+	numb=numb+" "*(4-len(numb))
 	return numb

@@ -16,7 +16,8 @@ from sys import argv
 
 optAverageImages = "-a"
 optPCA = "-p"
-optPCAcomps = 10
+optPCAcomps = 28
+displayWidth=39
 
 if "help" in argv or "-h" in argv:
 	print("Minimum distance classifier")
@@ -30,7 +31,7 @@ if "help" in argv or "-h" in argv:
 Learning from labeled set
 """
 
-print("Starting reading & training..")
+print("Reading & training..")
 
 data_unproc = np.load("data/trn_img.npy")
 label = np.load("data/trn_lbl.npy")
@@ -48,7 +49,7 @@ totalLearningOps = 0
 progress = 0
 
 if optPCA in argv :
-	print("(PCA  processing is  enabled)")
+	print("(PCA processing enabled)")
 	# pip/conda package scikit-learn
 	# http://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html
 	from sklearn.decomposition import PCA
@@ -60,7 +61,7 @@ if optPCA in argv :
 	for i in range(len(data_unproc)):
 		data.append(np.hstack(pca.fit(np.array(data_unproc[i]).reshape(28,28)).components_))
 		progress+=1
-		print(progressBar(progress,totalLearningOps,29), end="\r")
+		print(progressBar(progress,totalLearningOps,displayWidth), end="\r")
 else:
 	totalLearningOps+=28*28*10
 	data = data_unproc
@@ -73,9 +74,9 @@ for i in range(10): #which category
 	for j in range(len(data[0])):
 		app[i]=np.mean(dataSliced[i], axis=0)#wot
 		progress+=1
-		print(progressBar(progress,totalLearningOps,29), end="\r")
+		print(progressBar(progress,totalLearningOps,displayWidth), end="\r")
 		
-print(" "*29, end="\r")# erase progress line
+print(" "*displayWidth, end="\r")# erase progress line
 
 
 
@@ -127,41 +128,75 @@ total = [0,0,0,0,0,0,0,0,0,0]
 nbWrong = [0,0,0,0,0,0,0,0,0,0]
 guesses = [0,0,0,0,0,0,0,0,0,0]
 
+# +- label
+# |
+# guess
+confusionMatrix =[
+[0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0]
+]
+
 for i in range(len(testdata)) :
 	# compute average and see to which it is closest
 	guess = getMinDistanceIndex(app, testdata[i])
 	if (guess != testlabel[i]):
 		nbWrong[testlabel[i]]+=1
-	print(progressBar(i,len(testdata),29), end="\r")
+	print(progressBar(i,len(testdata),displayWidth), end="\r")
 	total[testlabel[i]]+=1
-	guesses[guess]+=1
+	confusionMatrix[guess][testlabel[i]]+=1
+	guesses[guess]+=1 # it can be computed from the confusion matrix, but honestly, the computer is here to do it for us
 
-print(" "*29, end="\r")# erase progress line
+print(" "*displayWidth, end="\r")# erase progress line
 
-guessTot = sum(guesses)
-print("Approx guesses distribution :")
-print("0  1  2  3  4  5  6  7  8  9")
+
+print("Approximate guesses distribution :")
+print("0- -1- -2- -3- -4- -5- -6- -7- -8- -9")
 # total très possiblement != 100 à cause de l'arrondi
+guessTot = sum(guesses)
 for i in range(10):
 	prop = round((guesses[i]/guessTot)*100)
 	if prop < 10:
-		prop = str(prop)+"% "
+		prop = str(prop)+"   "
 	elif prop < 100:
-		prop = str(prop)+"%"
+		prop = str(prop)+"  "
 	else:
-		prop = str(prop)
+		prop = str(prop)+" "
 	print(prop, end="");
-	
-print("\n-----------------------------")
 
+print("\n"+"-"*displayWidth)
 
+print("Confusion matrix (x:label, y:guess) :")
+
+print("0- -1- -2- -3- -4- -5- -6- -7- -8- -9")
+for i in range(10):
+	for j in range(10):
+		if (confusionMatrix[i][j] < 10):
+			print(confusionMatrix[i][j], end="   ")
+		elif confusionMatrix[i][j] < 100:
+			print(confusionMatrix[i][j], end="  ")
+		else:
+			print(confusionMatrix[i][j], end=" ")
+	print()
+
+print("\n"+"-"*displayWidth)
+
+print("Failure rate per category :")
+print("0- -1- -2- -3- -4- -5- -6- -7- -8- -9")
 bigWrong=0
 bigTotal=0
 for i in range(10):
-	print("Cat. "+str(i)+" failure rate  : "+getNicePercent((nbWrong[i]/total[i])*100))
+	print(getNiceRound((nbWrong[i]/total[i])*100), end="");
 	bigWrong+=nbWrong[i]
 	bigTotal+=total[i]
-print("-----------------------------")
-print("Total  failure rate  : "+getNicePercent((bigWrong/bigTotal)*100))
+print("\n"+"-"*displayWidth)
+print("Total  failure rate  : "+getNicePercent((bigWrong/bigTotal)*100,2))
 
 #TODO confusion matrix
